@@ -34,6 +34,7 @@ Rerun this part every time restarting your OpenFaaS cluster
 ``` bash
 minikube start                          # starts a new Kubernetes local cluster
 k3sup app install openfaas              # install OpenFaaS in Helm
+#sleep 3                                # may take a while to avoid "error: unable to forward port because pod is not running. Current status=Pending" and get the Pod (cluster) ready
 kubectl port-forward svc/gateway -n openfaas 8080:8080 &
                                         # tunnel between local computer with the Kubernetes cluster
 export OPENFAAS_URL=$(minikube ip):31112
@@ -82,9 +83,19 @@ kubectl logs deployment/$func_name -n openfaas-fn
 kubectl logs deployment/queue-worker -n openfaas
 ```
 
+### Troubleshooting
+
+1. If error `Cannot connect to OpenFaaS on URL: http://127.0.0.1:8080` is shown, OpenFaaS cannot access its deafult IP address and needs redirection: add the gateway option `-g $OPENFAAS_URL` to all of your `faas-cli` commands
+2. Retrieve PASSWORD after logging in
+
+    ``` bash
+    PASSWORD=$(kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password)" | base64 --decode; echo)
+    echo $PASSWORD
+    ```
+
 ### Terminate and Teardown
 
 ``` bash
+kill %1                                 # kill off 'kubectl port-forward svc/gateway -n openfaas 8080:8080' (if it is still the first job)
 minikube delete
-kill %1                                 # kill off 'kubectl port-forward svc/gateway -n openfaas 8080:8080'
 ```
