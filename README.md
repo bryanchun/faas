@@ -1,6 +1,6 @@
 # faas
 
-Instructions for using the serverless function-as-a-service (faas) tool OpenFaaS for the first time and some completed/attemtped labs of workshops at https://github.com/openfaas/workshop, for documentation.
+Instructions for using the serverless function-as-a-service (faas) tool OpenFaaS for the first time and some completed/attempted labs of workshops at https://github.com/openfaas/workshop, for documentation.
 
 - Environment: macOS
 - Purpose: Local development
