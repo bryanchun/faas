@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <title>OpenFaaS</title>
+  <script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  <style>
+    .result {
+        font-family: 'Roboto Mono', monospace;
+    }
+    </style>
+</head>
+<body>
+  <h2>Figlet</h2>
+  <p>
+    Text: <input type="text" name="text" id="text"> 
+    <button id="generate">Generate</button>
+  </p>
+  
+  <textarea class="result" cols="80" rows="10"></textarea>
+
+  <script type="text/javascript">
+    $(function(){
+      // Generate button click
+      $('#generate').on('click', function() {
+        // Execute ajax request
+        $.ajax({
+          url:'./figlet',
+          type:'POST',
+          data:$('#text').val()
+        })
+        .done(function(data) {
+          // ajax success
+          $('.result').val(data);
+          console.log(data);
+        })
+        .fail(function(data) {
+          // ajax failure
+          $('.result').val(data);
+          console.log(data);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
