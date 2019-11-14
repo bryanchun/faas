@@ -13,7 +13,6 @@ sysctl -a | grep -E --color 'machdep.cpu.features|VMX'
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
                                         # install homebrew if you haven't
 brew install docker                     # install docker if you haven't
-open -a docker                          # and get docker running in background
 ```
 
 ### Installations
@@ -32,16 +31,36 @@ curl -SLsf https://get.k3sup.dev/ | sudo sh
 Rerun this part every time restarting your OpenFaaS cluster
 
 ``` bash
+open -a docker                          # get docker running in background
 minikube start                          # starts a new Kubernetes local cluster
 k3sup app install openfaas              # install OpenFaaS in Helm
-#sleep 3                                # may take a while to avoid "error: unable to forward port because pod is not running. Current status=Pending" and get the Pod (cluster) ready
+until $(kubectl get all -n openfaas | grep pod/gateway | grep -q Running); do
+    # may take a while to avoid "error: unable to forward port because pod is not running. Current status=Pending" and get the Pod (cluster) ready
+    echo 'waiting for openfaas pod to get ready'
+    sleep 10
+done
 kubectl port-forward svc/gateway -n openfaas 8080:8080 &
                                         # tunnel between local computer with the Kubernetes cluster
+jobs                                    # the tunnelling job should be running in background
+
+until $(kubectl -n openfaas get pods | grep faas-idler | grep -q Running); do
+    # may take a while to avoid "Cannot connect to OpenFaaS on URL: http://xxx.xxx.xx.xxx:31112. Get http://xxx.xxx.xx.xxx:31112/system/functions: dial tcp xxx.xxx.xx.xxx:31112: connect: connection refused" and get the URL ready
+    echo 'waiting for openfaas URL to get ready'
+    sleep 10
+done
 export OPENFAAS_URL=$(minikube ip):31112
-PASSWORD=$(kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo)                  # generate password for OpenFaaS and register it
+                                        # remember the hosted URL for OpenFaaS
+PASSWORD=$(kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo)
+                                        # generate password for OpenFaaS and register it
 echo -n $PASSWORD | faas-cli login --username admin --password-stdin -g $OPENFAAS_URL
                                         # login to OpenFaaS
 faas-cli list                           # success check
+```
+
+or as a shorthand: 
+
+``` bash
+. ./host.sh
 ```
 
 ### Usage
@@ -53,6 +72,12 @@ faas-cli push -f hello-faas.yml
 faas-cli deploy -f hello-faas.yml
 faas-cli up -f hello-faas.yml       # build && push && deploy
 # Go to $OPENFAAS_URL/function/$function_name
+
+faas-cli invoke hello-faas          # call a function
+echo "42" | faas-cli invoke hello-faas   # pass input to a function
+echo | faas-cli invoke hello-faas   # pass nothing to a function
+faas-cli invoke hello-faas | faas-cli invoke hello-faas
+                                    # one way to compose serverless function: piping
 
 # Show OpenFaaS dashboard
 faas-cli dashboard
