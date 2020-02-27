@@ -25,14 +25,14 @@ brew install minikube                   # minikube: runs Kubernetes locally - as
 brew install kubectl                    # kubectl: is the cli for Kubernetes
 brew install kubernetes-helm            # Helm: is the package manager for Kubernetes
 curl -sL cli.openfaas.com | sudo sh     # faas-cli: is the cli for OpenFaas - this is the official installation command
-curl -SLsf https://get.k3sup.dev/ | sudo sh
+curl -sLS https://dl.get-arkade.dev | sudo sh
                                         # k3sup: install helm charts (packages), including OpenFaaS, easier
 
 #########################
 # Hosting OpenFaaS (rerun in the beginning of each OpenFaaS session)
 #########################
 minikube start                          # starts a new Kubernetes local cluster
-k3sup app install openfaas
+arkade install openfaas
 kubectl port-forward svc/gateway -n openfaas 8080:8080 &
 export OPENFAAS_URL=$(minikube ip):31112
 PASSWORD=$(kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo)
